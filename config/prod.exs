@@ -1,4 +1,4 @@
-imprt(Config)
+import Config
 
 config :bankingAPI_web, BankingAPIWeb.Endpoint,
   url: [host: "example.com", port: 80],
