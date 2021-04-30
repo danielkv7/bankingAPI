@@ -11,7 +11,7 @@ config :bankingAPI, BankingAPI.Repo,
 config :bankingAPI_web, BankingAPIWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
-  code_reloader: true,
+  code_reloader: true
 
 config :logger, :console, format: "[$level] $message\n"
 
