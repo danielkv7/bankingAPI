@@ -29,10 +29,25 @@ defmodule BankingAPI.Users do
       %{valid?: false} = changeset ->
         Logger.error("Error while inserting new user. Error: #{inspect(changeset)}")
         {:error, changeset}
+
+      {:error, changeset} ->
+        Logger.error("Error while inserting new user. Error: #{inspect(changeset)}")
+
+        emailConflict? =
+          changeset.errors
+          |> Enum.any?(fn {:email, {email_error_type, _}} ->
+            email_error_type == "has already been taken"
+          end)
+
+        case emailConflict? do
+          true ->
+            Logger.error("Email already taken")
+            {:error, :email_conflict}
+
+          _ ->
+            Logger.error("Error while inserting new user. Error: #{inspect(changeset)}")
+            {:error, changeset}
+        end
     end
-  rescue
-    Ecto.ConstraintError ->
-      Logger.error("Email already taken")
-      {:error, :email_conflict}
   end
 end

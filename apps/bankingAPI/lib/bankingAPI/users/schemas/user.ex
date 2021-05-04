@@ -1,13 +1,12 @@
 defmodule BankingAPI.Users.Schemas.User do
   @moduledoc """
-  The user of a account
+  The user of an account
   """
   use Ecto.Schema
 
   import Ecto.Changeset
 
   @required [:name, :email]
-  @optional []
 
   @derive {Jason.Encoder, except: [:__meta__]}
 
@@ -22,9 +21,10 @@ defmodule BankingAPI.Users.Schemas.User do
 
   def changeset(model \\ %__MODULE__{}, params) do
     model
-    |> cast(params, @required ++ @optional)
+    |> cast(params, @required)
     |> validate_required(@required)
     |> validate_length(:name, min: 3)
     |> validate_format(:email, ~r/^[A-Za-z0-9._%+\-+']+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,4}$/)
+    |> unique_constraint(:email)
   end
 end
