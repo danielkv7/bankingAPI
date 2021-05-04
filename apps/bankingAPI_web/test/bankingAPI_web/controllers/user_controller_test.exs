@@ -15,20 +15,16 @@ defmodule BankingAPIWeb.UserControllerTest do
         "email_confirmation" => email
       }
 
-      assert Enum.empty?(Repo.all(User))
-
       response =
         ctx.conn
         |> post("/api/users", input)
         |> json_response(200)
 
-      assert !Enum.empty?(Repo.all(User))
+      assert [%{id: created_id, name: created_name, email: created_email}] = Repo.all(User)
 
-      created_user = Repo.get_by(User, id: response["id"])
-
-      assert created_user.id == response["id"]
-      assert created_user.name == response["name"]
-      assert created_user.email == response["email"]
+      assert created_id == response["id"]
+      assert created_name == name
+      assert created_email == email
     end
 
     test "fail with 400 when email_confirmation does NOT match email", ctx do
@@ -41,7 +37,7 @@ defmodule BankingAPIWeb.UserControllerTest do
                "type" => "bad_input"
              }
 
-      assert Enum.empty?(Repo.all(User))
+      assert [] == Repo.all(User)
     end
 
     test "fail with 400 when name is too small", ctx do
@@ -54,7 +50,7 @@ defmodule BankingAPIWeb.UserControllerTest do
                "type" => "bad_input"
              }
 
-      assert Enum.empty?(Repo.all(User))
+      assert [] == Repo.all(User)
     end
 
     test "fail with 400 when email format is invalid", ctx do
@@ -67,7 +63,7 @@ defmodule BankingAPIWeb.UserControllerTest do
                "type" => "bad_input"
              }
 
-      assert Enum.empty?(Repo.all(User))
+      assert [] == Repo.all(User)
     end
 
     test "fail with 400 when email_confirmation format is invalid", ctx do
@@ -80,7 +76,7 @@ defmodule BankingAPIWeb.UserControllerTest do
                "type" => "bad_input"
              }
 
-      assert Enum.empty?(Repo.all(User))
+      assert [] == Repo.all(User)
     end
 
     test "fail with 400 when required fields are missing", ctx do
@@ -93,16 +89,16 @@ defmodule BankingAPIWeb.UserControllerTest do
                "type" => "bad_input"
              }
 
-      assert Enum.empty?(Repo.all(User))
+      assert [] == Repo.all(User)
     end
 
     @tag capture_log: true
     test "fail with 422 when email is already taken", ctx do
       email = "#{Ecto.UUID.generate()}@email.com"
 
-      assert Enum.empty?(Repo.all(User))
-
       Repo.insert!(%User{email: email})
+
+      assert [initial_user] = Repo.all(User)
 
       input = %{
         "name" => "Um Dois Três de Oliveira Quatro",
@@ -117,7 +113,7 @@ defmodule BankingAPIWeb.UserControllerTest do
                "type" => "conflict"
              }
 
-      assert !Enum.empty?(Repo.all(User))
+      assert [initial_user] == Repo.all(User)
     end
   end
 end
