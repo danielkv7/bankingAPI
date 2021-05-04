@@ -22,10 +22,10 @@ defmodule BankingAPI.Users.Inputs.Create do
     |> cast(params, @required ++ @optional)
     |> validate_required(@required)
     |> validate_length(:name, min: 3)
-    |> validate_format(:email, ~r/^[A-Za-z0-9._%+-+']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/)
+    |> validate_format(:email, ~r/^[A-Za-z0-9._%+\-+']+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,4}$/)
     |> validate_format(
       :email_confirmation,
-      ~r/^[A-Za-z0-9._%+-+']+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/
+      ~r/^[A-Za-z0-9._%+\-+']+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,4}$/
     )
     |> validate_email_and_confirmation_are_the_same()
   end
