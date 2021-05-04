@@ -1,10 +1,36 @@
 defmodule BankingAPIWeb.UserControllerTest do
   use BankingAPIWeb.ConnCase, async: true
 
-  alias BankingAPI.Users.Schemas.User
   alias BankingAPI.Repo
+  alias BankingAPI.Users.Schemas.User
 
   describe "POST /api/users" do
+    test "sucess with 200 and user created", ctx do
+      name = "Renan infinity PR"
+      email = "infinityPR@mail.com"
+
+      input = %{
+        "name" => name,
+        "email" => email,
+        "email_confirmation" => email
+      }
+
+      assert Enum.empty?(Repo.all(User))
+
+      response =
+        ctx.conn
+        |> post("/api/users", input)
+        |> json_response(200)
+
+      assert !Enum.empty?(Repo.all(User))
+
+      created_user = Repo.get_by(User, id: response["id"])
+
+      assert created_user.id == response["id"]
+      assert created_user.name == response["name"]
+      assert created_user.email == response["email"]
+    end
+
     test "fail with 400 when email_confirmation does NOT match email", ctx do
       input = %{"name" => "abc", "email" => "a@a.com", "email_confirmation" => "b@a.com"}
 
@@ -14,6 +40,8 @@ defmodule BankingAPIWeb.UserControllerTest do
                "description" => "Invalid input",
                "type" => "bad_input"
              }
+
+      assert Enum.empty?(Repo.all(User))
     end
 
     test "fail with 400 when name is too small", ctx do
@@ -25,6 +53,8 @@ defmodule BankingAPIWeb.UserControllerTest do
                "description" => "Invalid input",
                "type" => "bad_input"
              }
+
+      assert Enum.empty?(Repo.all(User))
     end
 
     test "fail with 400 when email format is invalid", ctx do
@@ -36,6 +66,8 @@ defmodule BankingAPIWeb.UserControllerTest do
                "description" => "Invalid input",
                "type" => "bad_input"
              }
+
+      assert Enum.empty?(Repo.all(User))
     end
 
     test "fail with 400 when email_confirmation format is invalid", ctx do
@@ -47,6 +79,8 @@ defmodule BankingAPIWeb.UserControllerTest do
                "description" => "Invalid input",
                "type" => "bad_input"
              }
+
+      assert Enum.empty?(Repo.all(User))
     end
 
     test "fail with 400 when required fields are missing", ctx do
@@ -58,11 +92,15 @@ defmodule BankingAPIWeb.UserControllerTest do
                "description" => "Invalid input",
                "type" => "bad_input"
              }
+
+      assert Enum.empty?(Repo.all(User))
     end
 
     @tag capture_log: true
     test "fail with 422 when email is already taken", ctx do
       email = "#{Ecto.UUID.generate()}@email.com"
+
+      assert Enum.empty?(Repo.all(User))
 
       Repo.insert!(%User{email: email})
 
@@ -78,6 +116,8 @@ defmodule BankingAPIWeb.UserControllerTest do
                "description" => "Email already taken",
                "type" => "conflict"
              }
+
+      assert !Enum.empty?(Repo.all(User))
     end
   end
 end

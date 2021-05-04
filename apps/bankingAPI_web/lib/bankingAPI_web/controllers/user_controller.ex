@@ -11,7 +11,7 @@ defmodule BankingAPIWeb.UserController do
 
   def create(conn, params) do
     with {:ok, input} <- InputValidation.cast_and_apply(params, Inputs.Create),
-         {:ok, user} <- Users.create_new_user(input) do
+         {:ok, user} <- Users.create(input) do
       send_json(conn, 200, user)
     else
       {:error, %Ecto.Changeset{}} ->
