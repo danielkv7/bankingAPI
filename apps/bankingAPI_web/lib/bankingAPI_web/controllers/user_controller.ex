@@ -20,7 +20,7 @@ defmodule BankingAPIWeb.UserController do
 
       {:error, :email_conflict} ->
         msg = %{type: "conflict", description: "Email already taken"}
-        send_json(conn, 412, msg)
+        send_json(conn, 422, msg)
     end
   end
 

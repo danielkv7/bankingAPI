@@ -61,7 +61,7 @@ defmodule BankingAPIWeb.UserControllerTest do
     end
 
     @tag capture_log: true
-    test "fail with 412 when email is already taken", ctx do
+    test "fail with 422 when email is already taken", ctx do
       email = "#{Ecto.UUID.generate()}@email.com"
 
       Repo.insert!(%User{email: email})
@@ -74,7 +74,7 @@ defmodule BankingAPIWeb.UserControllerTest do
 
       assert ctx.conn
              |> post("/api/users", input)
-             |> json_response(412) == %{
+             |> json_response(422) == %{
                "description" => "Email already taken",
                "type" => "conflict"
              }
