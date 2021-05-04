@@ -19,7 +19,7 @@ defmodule BankingAPI.Users.Inputs.Create do
     |> cast(params, @required)
     |> validate_required(@required)
     |> validate_length(:name, min: 3)
-    |> validate_format(:email, ~r/^[A-Za-z0-9._%+\-+']+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,4}$/)
+    |> validate_format(:email, ~r/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)
     |> validate_confirmation(:email)
   end
 end
