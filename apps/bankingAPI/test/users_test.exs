@@ -18,7 +18,7 @@ defmodule BankingAPI.UsersTest do
     test "successfully create an user with valid input" do
       email = "#{Ecto.UUID.generate()}@email.com"
 
-      assert {:ok, %User{name: "random name", email: ^email} = user} =
+      assert {:ok, %User{name: "random name", email: ^email, inserted_at: %NaiveDateTime{}, updated_at: %NaiveDateTime{}} = user} =
                Users.create(%Inputs.Create{
                  name: "random name",
                  email: email
