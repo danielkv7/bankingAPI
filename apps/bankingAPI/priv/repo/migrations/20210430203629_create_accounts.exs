@@ -5,7 +5,7 @@ defmodule BankingAPI.Repo.Migrations.CreateAccount do
     create table(:accounts, primary_key: false) do
       add(:id, :uuid, primary_key: true)
       add(:user_id, references(:users, type: :uuid), null: false)
-      add(:account_number, :integer, null: false)
+      add(:account_number, :serial, null: false)
       add(:amount, :integer, null: false)
 
       timestamps()
@@ -18,6 +18,8 @@ defmodule BankingAPI.Repo.Migrations.CreateAccount do
     )
 
     create(unique_index(:accounts, [:account_number]))
+
+    execute "ALTER SEQUENCE accounts_account_number_seq START with 10000 RESTART"
 
     create(constraint(:accounts, "ammount_must_be_0_or_positive", check: "amount >= 0"))
 

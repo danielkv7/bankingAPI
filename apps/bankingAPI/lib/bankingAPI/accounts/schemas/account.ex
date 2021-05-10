@@ -1,24 +1,23 @@
 defmodule BankingAPI.Accounts.Schemas.Account do
   @moduledoc """
-  The entity of Account.
+  Account entity.
 
-  1 user (id) - N accounts (FK user_id)
+  1 account (FK user_id) -> 1 user (id)
   """
   use Ecto.Schema
 
   import Ecto.Changeset
 
-  @required [:user, :account_number, :amount]
+  alias BankingAPI.Users.Schemas.User
 
   @derive {Jason.Encoder, except: [:__meta__]}
-
-  alias BankingAPI.Users.Schemas.User
+  @required [:amount]
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "accounts" do
     belongs_to(:user, User)
-    field(:account_number, :integer)
+    field(:account_number, :integer, read_after_writes: true)
     field(:amount, :integer)
 
     timestamps()
@@ -28,8 +27,6 @@ defmodule BankingAPI.Accounts.Schemas.Account do
     model
     |> cast(params, @required)
     |> validate_required(@required)
-    |> validate_length(:account_number, min: 5, max: 5)
-    |> unique_constraint(:account_number)
     |> validate_number(:amount, greater_than_or_equal_to: 0)
   end
 end

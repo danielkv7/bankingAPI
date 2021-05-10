@@ -1,6 +1,6 @@
 defmodule BankingAPI.Users.Inputs.Create do
   @moduledoc """
-  Input data for calling insert_new_user/1.
+  Input data for calling create/1.
   """
   use Ecto.Schema
 
