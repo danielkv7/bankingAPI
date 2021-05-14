@@ -6,13 +6,13 @@ defmodule BankingAPIWeb.UserControllerTest do
 
   describe "POST /api/users" do
     test "sucess with 200 and user created", ctx do
-      name = "Renan infinity PR"
-      email = "infinityPR@mail.com"
+      input_name = "Renan infinity PR"
+      input_email = "infinityPR@mail.com"
 
       input = %{
-        "name" => name,
-        "email" => email,
-        "email_confirmation" => email
+        "name" => input_name,
+        "email" => input_email,
+        "email_confirmation" => input_email
       }
 
       response =
@@ -20,73 +20,118 @@ defmodule BankingAPIWeb.UserControllerTest do
         |> post("/api/users", input)
         |> json_response(200)
 
-      assert [%{id: created_id, name: created_name, email: created_email}] = Repo.all(User)
+      assert response["name"] == input_name
+      assert response["email"] == input_email
 
-      assert created_id == response["id"]
-      assert created_name == name
-      assert created_email == email
+      assert [%{name: created_name, email: created_email, account: created_account}] =
+               Repo.all(User) |> Repo.preload(:account)
+
+      assert response["name"] == created_name
+      assert response["email"] == created_email
+      assert response["account"]["account_number"] == created_account.account_number
+      assert response["account"]["amount"] == created_account.amount
     end
 
-    test "fail with 400 when email_confirmation does NOT match email", ctx do
-      input = %{"name" => "abc", "email" => "a@a.com", "email_confirmation" => "b@a.com"}
+    test "fail with 400 when name length is lower than 3", ctx do
+      input_name = "aa"
+      input_email = "aa@mail.com"
 
-      assert ctx.conn
-             |> post("/api/users", input)
-             |> json_response(400) == %{
-               "description" => "Invalid input",
-               "type" => "bad_input"
+      input = %{
+        "name" => input_name,
+        "email" => input_email,
+        "email_confirmation" => input_email
+      }
+
+      reponse =
+        ctx.conn
+        |> post("/api/users", input)
+        |> json_response(411)
+
+      assert reponse == %{
+               "description" => "Name must have 3 digits or more",
+               "type" => "length_required"
              }
 
       assert [] == Repo.all(User)
     end
 
-    test "fail with 400 when name is too small", ctx do
-      input = %{"name" => "A", "email" => "a@a.com", "email_confirmation" => "a@a.com"}
+    test "fail with 412 when email_confirmation does NOT match email", ctx do
+      input_name = "aabbcc"
+      input_email = "aabbcc@mail.com"
 
-      assert ctx.conn
-             |> post("/api/users", input)
-             |> json_response(400) == %{
-               "description" => "Invalid input",
-               "type" => "bad_input"
+      input = %{
+        "name" => input_name,
+        "email" => input_email,
+        "email_confirmation" => "aabb@mail.com"
+      }
+
+      response =
+        ctx.conn
+        |> post("/api/users", input)
+        |> json_response(412)
+
+      assert response == %{
+               "description" => "E-mail confirmations does not match",
+               "type" => "precondition_failed"
              }
 
       assert [] == Repo.all(User)
     end
 
-    test "fail with 400 when email format is invalid", ctx do
-      input = %{"name" => "Abc de D", "email" => "a@@a.com", "email_confirmation" => "a@a.com"}
+    test "fail with 412 when email format is invalid", ctx do
+      input_name = "aabbcc"
+      input_email = "aabbcc.mail.com"
 
-      assert ctx.conn
-             |> post("/api/users", input)
-             |> json_response(400) == %{
-               "description" => "Invalid input",
-               "type" => "bad_input"
+      input = %{
+        "name" => input_name,
+        "email" => input_email,
+        "email_confirmation" => input_email
+      }
+
+      response =
+        ctx.conn
+        |> post("/api/users", input)
+        |> json_response(412)
+
+      assert response == %{
+               "description" => "E-mail has invalid format",
+               "type" => "precondition_failed"
              }
 
       assert [] == Repo.all(User)
     end
 
-    test "fail with 400 when email_confirmation format is invalid", ctx do
-      input = %{"name" => "Abc de D", "email" => "a@a.com", "email_confirmation" => "a@@a.com"}
+    test "fail with 412 when email_confirmation format is invalid", ctx do
+      input_name = "aabbcc"
+      input_email = "aabbcc@mail.com"
 
-      assert ctx.conn
-             |> post("/api/users", input)
-             |> json_response(400) == %{
-               "description" => "Invalid input",
-               "type" => "bad_input"
+      input = %{
+        "name" => input_name,
+        "email" => input_email,
+        "email_confirmation" => "aabbcc.mail.com"
+      }
+
+      response =
+        ctx.conn
+        |> post("/api/users", input)
+        |> json_response(412)
+
+      assert response == %{
+               "description" => "E-mail confirmations does not match",
+               "type" => "precondition_failed"
              }
 
       assert [] == Repo.all(User)
     end
 
-    test "fail with 400 when required fields are missing", ctx do
+    test "fail with 428 when required fields are missing", ctx do
       input = %{}
 
       assert ctx.conn
              |> post("/api/users", input)
-             |> json_response(400) == %{
-               "description" => "Invalid input",
-               "type" => "bad_input"
+             |> json_response(428) == %{
+               "description" => "Name or Email can not be blank",
+               "type" => "precondition_required"
              }
 
       assert [] == Repo.all(User)
@@ -94,23 +139,27 @@ defmodule BankingAPIWeb.UserControllerTest do
 
     @tag capture_log: true
     test "fail with 422 when email is already taken", ctx do
-      email = "#{Ecto.UUID.generate()}@email.com"
+      input_name = "aabbcc"
+      input_email = "aabbcc@mail.com"
 
-      Repo.insert!(%User{email: email})
+      Repo.insert!(%User{name: input_name, email: input_email})
 
       assert [initial_user] = Repo.all(User)
 
       input = %{
-        "name" => "Um Dois Três de Oliveira Quatro",
-        "email" => email,
-        "email_confirmation" => email
+        "name" => input_name,
+        "email" => input_email,
+        "email_confirmation" => input_email
       }
 
-      assert ctx.conn
-             |> post("/api/users", input)
-             |> json_response(422) == %{
+      response =
+        ctx.conn
+        |> post("/api/users", input)
+        |> json_response(422)
+
+      assert response == %{
                "description" => "Email already taken",
-               "type" => "conflict"
+               "type" => "unprocessable_entity"
              }
 
       assert [initial_user] == Repo.all(User)
